@@ -18,7 +18,7 @@ const headers = {
   'X-Auth': md5(`Valantis_${formatedDate}`),
 };
 
-export const api = async (action, params) => {
+export const api = async (action, params = {}, retryCount = 5, timemout = 5000) => {
   const res = await fetch(baseUrl, {
     method,
     headers,
@@ -28,12 +28,21 @@ export const api = async (action, params) => {
     }),
   });
 
-  if (!res.ok) {
-    setTimeout(() => {
-      api(action, params);
-    }, 5000);
-  }
+  try {
+    if (!res.ok) {
+      const message = `Ошибка запроса. Попыток соединения: ${retryCount}. Перезагрузите страницу и попробуйте снова.`;
+      throw new Error(message);
+    }
 
-  const data = await res.json();
-  return data;
+    const data = await res.json();
+    return data.result;
+  } catch (error) {
+    if (retryCount > 0) {
+      console.log(`Статус ошибки ${res.status}. Повторный запрос.`);
+      await new Promise((resolve) => setTimeout(resolve, timemout));
+      return api(action, params, retryCount - 1);
+    } else {
+      throw error;
+    }
+  }
 };
