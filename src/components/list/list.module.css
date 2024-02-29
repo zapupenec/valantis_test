@@ -1,0 +1,41 @@
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.row {
+  display: flex;
+  width: 100%;
+  gap: 10px;
+}
+
+.row.header {
+  font-weight: bold;
+}
+
+.filter-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.column {
+  width: 0;
+}
+
+.id {
+  min-width: 350px;
+}
+
+.product {
+  flex-grow: 1;
+}
+
+.price {
+  min-width: 150px;
+}
+
+.brand {
+  min-width: 200px;
+}

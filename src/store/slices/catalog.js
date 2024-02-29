@@ -39,7 +39,7 @@ const initialState = {
     },
   },
   error: null,
-  loadingStatus: 'idle',
+  isLoading: 'idle',
 };
 
 const catalogSlice = createSlice({
@@ -56,14 +56,15 @@ const catalogSlice = createSlice({
   extraReducers: (builder) => {
     builder
       .addCase(load.pending, (state) => {
-        state.loadingStatus = 'loading';
+        state.isLoading = true;
+        state.error = null;
       })
       .addCase(load.fulfilled, (state, { payload }) => {
-        state.loadingStatus = 'idle';
+        state.isLoading = false;
         state.list = payload.list;
       })
       .addCase(load.rejected, (state, action) => {
-        state.loadingStatus = 'failed';
+        state.isLoading = false;
         state.error = action.error.message;
       });
   },
@@ -77,5 +78,6 @@ export const selectors = {
   selectList: (state) => state.catalog.list,
   selectParams: (state) => state.catalog.params,
   selectError: (state) => state.catalog.error,
+  selectIsLoading: (state) => state.catalog.isLoading,
 };
 export default catalogSlice.reducer;
