@@ -1,14 +1,15 @@
 import { useDispatch, useSelector } from 'react-redux';
 import { catalogActions, catalogSelectors } from './store/slices';
 import { useEffect } from 'react';
-import { List } from './components';
+import { List, Pagination } from './components';
 import { useDebounce } from './hooks/use-debounce';
 
 export const App = () => {
   const list = useSelector(catalogSelectors.selectList);
+  const count = useSelector(catalogSelectors.selectCount);
   const params = useSelector(catalogSelectors.selectParams);
-  const dispatch = useDispatch();
 
+  const dispatch = useDispatch();
   const loadList = useDebounce(() => dispatch(catalogActions.load(params)), 1000);
 
   useEffect(() => {
@@ -31,15 +32,18 @@ export const App = () => {
     dispatch(
       catalogActions.setFilterParams({
         ...params.filterParams,
-        [name]: value,
+        [name]: {
+          ...params.filterParams[name],
+          value,
+        },
       }),
     );
-    setPage(1)();
   };
 
   return (
     <>
-      <List list={list} params={params} onChangeParam={handleChangeFilterField} />
+      <Pagination page={params.page} count={count} limit={params.limit} handleClick={setPage} />
+      <List list={list} params={params} count={count} onChangeParam={handleChangeFilterField} />
     </>
   );
 };

@@ -3,14 +3,19 @@ import { api } from '../../api';
 
 const load = createAsyncThunk('catalog/load', async (params) => {
   const filterParams = Object.entries(params.filterParams);
-  const isEmptyFilter = filterParams.every(([, value]) => value === null);
+  const isEmptyFilter = filterParams.every(([, { value }]) => value === null);
 
   let ids = [];
   if (isEmptyFilter) {
     ids = await api('get_ids');
   } else {
     ids = await api('filter', {
-      ...Object.fromEntries(filterParams.filter(([, value]) => value !== null)),
+      ...filterParams.reduce((acc, [filterName, { value }]) => {
+        if (value !== null) {
+          return { ...acc, [filterName]: value };
+        }
+        return acc;
+      }, {}),
     });
   }
 
@@ -29,17 +34,27 @@ const load = createAsyncThunk('catalog/load', async (params) => {
 
 const initialState = {
   list: [],
+  count: 1,
   params: {
     page: 1,
-    countOnPage: 50,
+    limit: 50,
     filterParams: {
-      brand: null,
-      price: null,
-      product: null,
+      product: {
+        title: 'Название',
+        value: null,
+      },
+      price: {
+        title: 'Цена',
+        value: null,
+      },
+      brand: {
+        title: 'Бренд',
+        value: null,
+      },
     },
   },
   error: null,
-  isLoading: 'idle',
+  loadingStatus: 'idle',
 };
 
 const catalogSlice = createSlice({
@@ -56,16 +71,19 @@ const catalogSlice = createSlice({
   extraReducers: (builder) => {
     builder
       .addCase(load.pending, (state) => {
-        state.isLoading = true;
+        state.loadingStatus = 'loading';
         state.error = null;
       })
       .addCase(load.fulfilled, (state, { payload }) => {
-        state.isLoading = false;
+        state.loadingStatus = 'success';
         state.list = payload.list;
+        state.count = payload.list.length;
+        state.params.page = 1;
       })
       .addCase(load.rejected, (state, action) => {
-        state.isLoading = false;
+        state.loadingStatus = 'error';
         state.error = action.error.message;
+        state.params.page = 1;
       });
   },
 });
@@ -76,8 +94,9 @@ export const actions = {
 };
 export const selectors = {
   selectList: (state) => state.catalog.list,
+  selectCount: (state) => state.catalog.count,
   selectParams: (state) => state.catalog.params,
   selectError: (state) => state.catalog.error,
-  selectIsLoading: (state) => state.catalog.isLoading,
+  selectLoadingStatus: (state) => state.catalog.loadingStatus,
 };
 export default catalogSlice.reducer;

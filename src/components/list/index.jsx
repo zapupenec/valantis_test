@@ -4,56 +4,39 @@ import clsx from 'clsx';
 
 import styles from './list.module.css';
 import { catalogSelectors } from '../../store/slices';
+import { FilterField } from './filter-field';
 
-export const List = ({ list, params, onChangeParam }) => {
+export const List = ({ list, count, params, onChangeParam }) => {
   const error = useSelector(catalogSelectors.selectError);
-  const isLoading = useSelector(catalogSelectors.selectIsLoading);
-  const { page, countOnPage, filterParams } = params;
+  const loadingStatus = useSelector(catalogSelectors.selectLoadingStatus);
+  const { page, limit, filterParams } = params;
 
-  const startIndex = page * countOnPage - countOnPage;
-  const endIndex = page * countOnPage;
+  const startIndex = page * limit - limit;
+  const endIndex = page * limit;
   const visibleItems = list.slice(startIndex, endIndex);
 
   return (
     <div className={styles.list}>
       <div className={clsx(styles.row, styles.header)}>
         <div className={clsx(styles.column, styles.id)}>id</div>
-        <label className={clsx(styles.column, styles['filter-field'], styles.product)}>
-          Название
-          <input
+        {Object.entries(filterParams).map(([filterName, { title, value }]) => (
+          <FilterField
+            key={filterName}
+            className={clsx(styles.column, styles[filterName])}
+            title={title}
             type="text"
-            name="product"
-            value={filterParams.product || ''}
+            name={filterName}
+            value={value || ''}
             onChange={onChangeParam}
-            disabled={isLoading}
+            disabled={loadingStatus === 'loading'}
           />
-        </label>
-        <label className={clsx(styles.column, styles['filter-field'], styles.price)}>
-          Цена
-          <input
-            type="number"
-            name="price"
-            value={filterParams.price || ''}
-            onChange={onChangeParam}
-            disabled={isLoading}
-          />
-        </label>
-        <label className={clsx(styles.column, styles['filter-field'], styles.brand)}>
-          Бренд
-          <input
-            type="text"
-            name="brand"
-            value={filterParams.brand || ''}
-            onChange={onChangeParam}
-            disabled={isLoading}
-          />
-        </label>
+        ))}
       </div>
-      {isLoading ? (
+      {loadingStatus === 'loading' ? (
         <div>...Загрузка</div>
-      ) : error ? (
+      ) : loadingStatus === 'error' ? (
         <div>{error}</div>
-      ) : visibleItems.length === 0 ? (
+      ) : loadingStatus === 'success' && count === 0 ? (
         <div>По данном запросу ничего не найдено</div>
       ) : (
         visibleItems.map((item) => (
@@ -78,13 +61,23 @@ List.propTypes = {
       price: PropTypes.number,
     }),
   ),
+  count: PropTypes.number,
   params: PropTypes.shape({
     page: PropTypes.number,
-    countOnPage: PropTypes.number,
+    limit: PropTypes.number,
     filterParams: PropTypes.shape({
-      brand: PropTypes.string,
-      price: PropTypes.number,
-      product: PropTypes.string,
+      brand: PropTypes.shape({
+        title: PropTypes.string,
+        value: PropTypes.string,
+      }),
+      price: PropTypes.shape({
+        title: PropTypes.string,
+        value: PropTypes.string,
+      }),
+      product: PropTypes.shape({
+        title: PropTypes.string,
+        value: PropTypes.string,
+      }),
     }),
   }),
   onChangeParam: PropTypes.func,
@@ -92,9 +85,10 @@ List.propTypes = {
 
 List.defaultProps = {
   list: [],
+  count: 0,
   params: {
     page: 1,
-    countOnPage: 50,
+    limit: 50,
     filterParams: {
       brand: null,
       price: null,

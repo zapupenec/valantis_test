@@ -1,0 +1,33 @@
+.pagination {
+  display: flex;
+  list-style: none;
+  justify-content: center;
+  margin: 0;
+  padding: 0;
+  gap: 5px;
+}
+
+.pagination-item {
+  height: 20px;
+  min-width: 20px;
+  text-align: center;
+  line-height: 20px;
+  cursor: pointer;
+}
+
+.pagination-item:hover {
+  background: #e1e1e1;
+}
+
+.pagination-item.active,
+.pagination-item.active:hover {
+  background: #0087e9;
+  color: #fff;
+  pointer-events: none;
+}
+
+.pagination-item.split {
+  cursor: default;
+  pointer-events: none;
+  color: #ccc;
+}

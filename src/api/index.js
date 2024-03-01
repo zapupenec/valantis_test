@@ -6,6 +6,7 @@ const formatedDate = date
     year: 'numeric',
     day: 'numeric',
     month: 'numeric',
+    timeZone: 'UTC',
   })
   .split('.')
   .reverse()
