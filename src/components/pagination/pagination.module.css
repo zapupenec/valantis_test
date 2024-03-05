@@ -26,7 +26,8 @@
   pointer-events: none;
 }
 
-.pagination-item.split {
+.pagination-item.split,
+.pagination-item.disabled {
   cursor: default;
   pointer-events: none;
   color: #ccc;

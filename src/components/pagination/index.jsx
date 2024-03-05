@@ -1,9 +1,12 @@
 import PropTypes from 'prop-types';
 import styles from './pagination.module.css';
 import clsx from 'clsx';
+import { useSelector } from 'react-redux';
+import { catalogSelectors } from '../../store/slices';
 
 export const Pagination = ({ page, limit, count, indent, handleClick }) => {
   const pageCount = Math.ceil(count / Math.max(limit, 1));
+  const loadingStatus = useSelector(catalogSelectors.selectLoadingStatus);
 
   let left = Math.max(page - indent, 1);
   const right = Math.min(left + indent * 2, pageCount);
@@ -35,16 +38,17 @@ export const Pagination = ({ page, limit, count, indent, handleClick }) => {
     <ul className={styles.pagination}>
       {items.map((number, index) => (
         <li
-          role="button"
-          tabIndex={0}
           key={index}
           className={clsx(styles['pagination-item'], {
             [styles.active]: number === page,
             [styles.split]: !number,
+            [styles.disabled]: number && loadingStatus !== 'success',
           })}
           onClick={handleClick(number)}
         >
-          {number ? number : '...'}
+          <button disabled={number && loadingStatus !== 'success'}>
+            {number ? number : '...'}
+          </button>
         </li>
       ))}
     </ul>

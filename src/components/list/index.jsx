@@ -6,14 +6,9 @@ import styles from './list.module.css';
 import { catalogSelectors } from '../../store/slices';
 import { FilterField } from './filter-field';
 
-export const List = ({ list, count, params, onChangeParam }) => {
+export const List = ({ list, count, filterParams, onChangeParam }) => {
   const error = useSelector(catalogSelectors.selectError);
   const loadingStatus = useSelector(catalogSelectors.selectLoadingStatus);
-  const { page, limit, filterParams } = params;
-
-  const startIndex = page * limit - limit;
-  const endIndex = page * limit;
-  const visibleItems = list.slice(startIndex, endIndex);
 
   return (
     <div className={styles.list}>
@@ -39,7 +34,7 @@ export const List = ({ list, count, params, onChangeParam }) => {
       ) : loadingStatus === 'success' && count === 0 ? (
         <div>По данном запросу ничего не найдено</div>
       ) : (
-        visibleItems.map((item) => (
+        list.map((item) => (
           <div className={styles.row} key={item.id}>
             <div className={clsx(styles.column, styles.id)}>{item.id}</div>
             <div className={clsx(styles.column, styles.product)}>{item.product}</div>
@@ -62,22 +57,18 @@ List.propTypes = {
     }),
   ),
   count: PropTypes.number,
-  params: PropTypes.shape({
-    page: PropTypes.number,
-    limit: PropTypes.number,
-    filterParams: PropTypes.shape({
-      brand: PropTypes.shape({
-        title: PropTypes.string,
-        value: PropTypes.string,
-      }),
-      price: PropTypes.shape({
-        title: PropTypes.string,
-        value: PropTypes.string,
-      }),
-      product: PropTypes.shape({
-        title: PropTypes.string,
-        value: PropTypes.string,
-      }),
+  filterParams: PropTypes.shape({
+    brand: PropTypes.shape({
+      title: PropTypes.string,
+      value: PropTypes.string,
+    }),
+    price: PropTypes.shape({
+      title: PropTypes.string,
+      value: PropTypes.string,
+    }),
+    product: PropTypes.shape({
+      title: PropTypes.string,
+      value: PropTypes.string,
     }),
   }),
   onChangeParam: PropTypes.func,
@@ -86,14 +77,10 @@ List.propTypes = {
 List.defaultProps = {
   list: [],
   count: 0,
-  params: {
-    page: 1,
-    limit: 50,
-    filterParams: {
-      brand: null,
-      price: null,
-      product: null,
-    },
+  filterParams: {
+    brand: null,
+    price: null,
+    product: null,
   },
   onChangeParam: () => {},
 };

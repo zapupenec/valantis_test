@@ -1,7 +1,7 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import { api } from '../../api';
 
-const load = createAsyncThunk('catalog/load', async (params) => {
+const loadIds = createAsyncThunk('catalog/loadIds', async (params) => {
   const filterParams = Object.entries(params.filterParams);
   const isEmptyFilter = filterParams.every(([, { value }]) => value === null);
 
@@ -19,7 +19,15 @@ const load = createAsyncThunk('catalog/load', async (params) => {
     });
   }
 
-  const items = await api('get_items', { ids });
+  return { ids: [...new Set(ids)] };
+});
+
+const loadItems = createAsyncThunk('catalog/loadItems', async ({ ids, params }) => {
+  const { page, limit } = params;
+  const startIndex = page * limit - limit;
+  const endIndex = page * limit;
+  const items = await api('get_items', { ids: ids.slice(startIndex, endIndex) });
+
   const uniqIds = [];
   const uniqItems = items.filter(({ id }) => {
     if (!uniqIds.includes(id)) {
@@ -33,6 +41,7 @@ const load = createAsyncThunk('catalog/load', async (params) => {
 });
 
 const initialState = {
+  ids: [],
   list: [],
   count: 1,
   params: {
@@ -70,17 +79,29 @@ const catalogSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      .addCase(load.pending, (state) => {
+      .addCase(loadIds.pending, (state) => {
         state.loadingStatus = 'loading';
         state.error = null;
       })
-      .addCase(load.fulfilled, (state, { payload }) => {
-        state.loadingStatus = 'success';
-        state.list = payload.list;
-        state.count = payload.list.length;
+      .addCase(loadIds.fulfilled, (state, { payload }) => {
+        state.ids = payload.ids;
+        state.count = payload.ids.length;
         state.params.page = 1;
       })
-      .addCase(load.rejected, (state, action) => {
+      .addCase(loadIds.rejected, (state, action) => {
+        state.loadingStatus = 'error';
+        state.error = action.error.message;
+        state.params.page = 1;
+      })
+      .addCase(loadItems.pending, (state) => {
+        state.loadingStatus = 'loading';
+        state.error = null;
+      })
+      .addCase(loadItems.fulfilled, (state, { payload }) => {
+        state.list = payload.list;
+        state.loadingStatus = 'success';
+      })
+      .addCase(loadItems.rejected, (state, action) => {
         state.loadingStatus = 'error';
         state.error = action.error.message;
         state.params.page = 1;
@@ -90,9 +111,11 @@ const catalogSlice = createSlice({
 
 export const actions = {
   ...catalogSlice.actions,
-  load,
+  loadIds,
+  loadItems,
 };
 export const selectors = {
+  selectIds: (state) => state.catalog.ids,
   selectList: (state) => state.catalog.list,
   selectCount: (state) => state.catalog.count,
   selectParams: (state) => state.catalog.params,

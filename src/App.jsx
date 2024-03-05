@@ -5,18 +5,30 @@ import { List, Pagination } from './components';
 import { useDebounce } from './hooks/use-debounce';
 
 export const App = () => {
+  const ids = useSelector(catalogSelectors.selectIds);
   const list = useSelector(catalogSelectors.selectList);
   const count = useSelector(catalogSelectors.selectCount);
   const params = useSelector(catalogSelectors.selectParams);
 
   const dispatch = useDispatch();
-  const loadList = useDebounce(() => dispatch(catalogActions.load(params)), 1000);
+  const loadIds = useDebounce(
+    () =>
+      dispatch(catalogActions.loadIds(params))
+        .unwrap()
+        .then(({ ids }) => {
+          dispatch(catalogActions.loadItems({ ids, params: { ...params, page: 1 } }));
+        }),
+    1000,
+  );
 
   useEffect(() => {
-    loadList();
+    loadIds();
   }, [params.filterParams]);
 
-  const setPage = (pageNum) => () => dispatch(catalogActions.setPage(pageNum));
+  const setPage = (pageNum) => () => {
+    dispatch(catalogActions.setPage(pageNum));
+    dispatch(catalogActions.loadItems({ ids, params: { ...params, page: pageNum } }));
+  };
 
   const handleChangeFilterField = (e) => {
     let { name, type, value } = e.target;
@@ -43,7 +55,12 @@ export const App = () => {
   return (
     <>
       <Pagination page={params.page} count={count} limit={params.limit} handleClick={setPage} />
-      <List list={list} params={params} count={count} onChangeParam={handleChangeFilterField} />
+      <List
+        list={list}
+        filterParams={params.filterParams}
+        count={count}
+        onChangeParam={handleChangeFilterField}
+      />
     </>
   );
 };
