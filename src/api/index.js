@@ -12,7 +12,7 @@ const formatedDate = date
   .reverse()
   .join('');
 
-const baseUrl = 'http://api.valantis.store:40000';
+const baseUrl = 'https://api.valantis.store:41000';
 const method = 'POST';
 const headers = {
   'content-type': 'application/json',
